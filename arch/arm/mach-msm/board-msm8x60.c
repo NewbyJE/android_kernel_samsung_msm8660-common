@@ -10493,7 +10493,7 @@ static void fixup_i2c_configs(void)
 
 	if (board_is_topaz_3g()) {
 #ifdef CONFIG_INPUT_LSM303DLH
-		lsm303dlh_acc_pdata.negate_X = 1;
+		lsm303dlh_acc_pdata.negate_x = 1;
 		lsm303dlh_acc_pdata.negate_z = 1;
 		lsm303dlh_mag_pdata.negate_x = 1;
 		lsm303dlh_mag_pdata.negate_z = 1;
