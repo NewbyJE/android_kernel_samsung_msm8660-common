@@ -10,7 +10,6 @@
  * GNU General Public License for more details.
  *
  */
-
 #include "vcd_ddl.h"
 #include "vcd_ddl_shared_mem.h"
 #include "vcd_ddl_metadata.h"

@@ -178,7 +178,7 @@ static void msm_enqueue(struct msm_device_queue *queue,
 	queue->len++;
 	if (queue->len > queue->max) {
 		queue->max = queue->len;
-		pr_info("%s: queue %s new max is %d\n", __func__,
+		pr_devel("%s: queue %s new max is %d\n", __func__,
 			queue->name, queue->max);
 	}
 	list_add_tail(entry, &queue->list);
@@ -195,7 +195,7 @@ static void msm_enqueue_vpe(struct msm_device_queue *queue,
 	queue->len++;
 	if (queue->len > queue->max) {
 		queue->max = queue->len;
-		pr_info("%s: queue %s new max is %d\n", __func__,
+		pr_devel("%s: queue %s new max is %d\n", __func__,
 			queue->name, queue->max);
 	}
 	list_add_tail(entry, &queue->list);
@@ -223,7 +223,7 @@ static void msm_enqueue_vpe(struct msm_device_queue *queue,
 	unsigned long flags;					\
 	struct msm_device_queue *__q = (queue);			\
 	struct msm_queue_cmd *qcmd = 0;				\
-	pr_info("msm_delete_entry\n");			\
+	pr_devel("msm_delete_entry\n");			\
 	spin_lock_irqsave(&__q->lock, flags);			\
 	if (!list_empty(&__q->list)) {				\
 		list_for_each_entry(qcmd, &__q->list, member)	\
@@ -245,14 +245,14 @@ static void msm_enqueue_vpe(struct msm_device_queue *queue,
 	struct msm_device_queue *__q = (queue);			\
 	struct msm_queue_cmd *qcmd;				\
 	spin_lock_irqsave(&__q->lock, flags);			\
-	pr_info("%s: draining queue %s\n", __func__, __q->name);	\
+	pr_devel("%s: draining queue %s\n", __func__, __q->name);	\
 	while (!list_empty(&__q->list)) {			\
 		__q->len--;					\
 		if(__q->len < 0) {				\
 			pr_err("%s,q->len < 0 unexpected.\n", __func__);\
 			break;					\
 		}						\
-		pr_info("%s,q->len = %d\n", __func__, __q->len);	\
+		pr_devel("%s,q->len = %d\n", __func__, __q->len);	\
 		qcmd = list_first_entry(&__q->list,		\
 			struct msm_queue_cmd, member);		\
 		if (qcmd) {					\
@@ -380,7 +380,7 @@ static int msm_pmem_table_add(struct hlist_head *ptype,
 
 	hlist_add_head(&(region->list), ptype);
 	spin_unlock_irqrestore(pmem_spinlock, flags);
-	pr_info("%s: type %d, paddr 0x%lx, vaddr 0x%lx\n",
+	pr_devel("%s: type %d, paddr 0x%lx, vaddr 0x%lx\n",
 		__func__, info->type, paddr, (unsigned long)info->vaddr);
 
 	return 0;
@@ -698,7 +698,7 @@ static int __msm_get_frame(struct msm_sync *sync,
 
 	if ((!qcmd->command) && (qcmd->error_code & MSM_CAMERA_ERR_MASK)) {
 		frame->error_code = qcmd->error_code;
-		pr_info("%s: fake frame with camera error code = %d\n",
+		pr_err("%s: fake frame with camera error code = %d\n",
 			__func__, frame->error_code);
 		goto err;
 	}
@@ -810,7 +810,7 @@ static int msm_enable_vfe(struct msm_sync *sync, void __user *arg)
 	if (sync->vfefn.vfe_enable)
 		rc = sync->vfefn.vfe_enable(&cfg);
 
-	pr_info("%s: rc %d\n", __func__, rc);
+	pr_devel("%s: rc %d\n", __func__, rc);
 	return rc;
 }
 
@@ -829,7 +829,7 @@ static int msm_disable_vfe(struct msm_sync *sync, void __user *arg)
 	if (sync->vfefn.vfe_disable)
 		rc = sync->vfefn.vfe_disable(&cfg, NULL);
 
-	pr_info("%s: rc %d\n", __func__, rc);
+	pr_devel("%s: rc %d\n", __func__, rc);
 	return rc;
 }
 
@@ -870,7 +870,7 @@ wait_event:
 		} else if (rc == -512 && loop < 100) {
 			loop++;
 			msleep(5);
-			pr_info("[CAM]%s: goto wait_event loop %d\n", __func__, loop);
+			pr_devel("[CAM]%s: goto wait_event loop %d\n", __func__, loop);
 			goto wait_event;
 		} else if (rc < 0) {
 			pr_err("%s: wait_event error %d\n", __func__, rc);
@@ -1036,7 +1036,7 @@ static int msm_divert_frame(struct msm_sync *sync,
 	struct msm_postproc buf;
 	int rc;
 
-	pr_info("%s: Frame PP sync->pp_mask %d\n", __func__, sync->pp_mask);
+	pr_devel("%s: Frame PP sync->pp_mask %d\n", __func__, sync->pp_mask);
 
 	if (!(sync->pp_mask & PP_PREV)  && !(sync->pp_mask & PP_SNAP)) {
 		pr_err("%s: diverting frame, not in PP_PREV or PP_SNAP!\n",
@@ -1108,7 +1108,7 @@ static int msm_get_stats(struct msm_sync *sync, void __user *arg)
 	if (!qcmd) {
 		/* Should be associated with wait_event
 			error -512 from __msm_control*/
-		pr_info("%s, qcmd is Null\n", __func__);
+		pr_err("%s, qcmd is Null\n", __func__);
 		rc = -ETIMEDOUT;
 		return rc;
 	}
@@ -1999,7 +1999,7 @@ static int msm_get_pic(struct msm_sync *sync, void __user *arg)
 			return -EFAULT;
 		}
 	}
-	pr_info("%s: copy snapshot frame to user\n", __func__);
+	pr_devel("%s: copy snapshot frame to user\n", __func__);
 	if (copy_to_user((void *)arg,
 		&ctrlcmd_t,
 		sizeof(struct msm_ctrl_cmd))) {
@@ -2071,7 +2071,7 @@ static int msm_error_config(struct msm_sync *sync, void __user *arg)
 		return -EFAULT;
 	}
 
-	pr_info("%s: Enqueue Fake Frame with error code = %d\n", __func__,
+	pr_devel("%s: Enqueue Fake Frame with error code = %d\n", __func__,
 		qcmd->error_code);
 	msm_enqueue(&sync->frame_q, &qcmd->list_frame);
 	return 0;
@@ -2158,7 +2158,7 @@ static int msm_pp_release(struct msm_sync *sync, void __user *arg)
 	unsigned long flags;
 
 	if (!sync->pp_mask) {
-		pr_warning("%s: pp not in progress for\n", __func__);
+		pr_devel("%s: pp not in progress for\n", __func__);
 		return -EINVAL;
 	}
 	if (sync->pp_mask & PP_PREV) {
@@ -2371,7 +2371,7 @@ static long msm_ioctl_config(struct file *filep, unsigned int cmd,
 
 	case MSM_CAM_IOCTL_ABORT_CAPTURE: {
 		unsigned long flags = 0;
-		pr_info("get_pic:MSM_CAM_IOCTL_ABORT_CAPTURE\n");
+		pr_devel("get_pic:MSM_CAM_IOCTL_ABORT_CAPTURE\n");
 		spin_lock_irqsave(&pmsm->sync->abort_pict_lock, flags);
 		pmsm->sync->get_pic_abort = 1;
 		spin_unlock_irqrestore(&pmsm->sync->abort_pict_lock, flags);
@@ -2418,6 +2418,34 @@ static long msm_ioctl_frame(struct file *filep, unsigned int cmd,
 	return rc;
 }
 
+static long msm_ioctl_ocontrol(struct file *filep, unsigned int cmd,
+	unsigned long arg)
+{
+	int rc = -EINVAL;
+	void __user *argp = (void __user *)arg;
+	struct msm_control_device *octrl_pmsm = filep->private_data;
+	struct msm_cam_device *pmsm = octrl_pmsm->pmsm;
+
+#if 0
+	mutex_lock(&pmsm->sync->lock);
+	if (!pmsm->sync->core_powered_on) {
+		mutex_unlock(&pmsm->sync->lock);
+		pr_err("%s, core not powered\n", __func__);
+		return -ENODEV;
+	}
+	mutex_unlock(&pmsm->sync->lock);
+#endif
+
+	switch (cmd) {
+	case MSM_CAM_IOCTL_SENSOR_IO_CFG:
+		rc = pmsm->sync->sctrl.s_config(argp);
+		break;
+	default:
+		return -EINVAL;
+		break;
+	}
+	return rc;
+}
 
 static long msm_ioctl_control(struct file *filep, unsigned int cmd,
 	unsigned long arg)
@@ -2472,20 +2500,20 @@ static int __msm_release(struct msm_sync *sync)
 	mutex_lock(&sync->lock);
 	if (sync->opencnt)
 		sync->opencnt--;
-	pr_info("%s, open count =%d\n", __func__, sync->opencnt);
+	pr_devel("%s, open count =%d\n", __func__, sync->opencnt);
 	if (!sync->opencnt) {
 		/* need to clean up system resource */
-		pr_info("%s, vfe_release\n", __func__);
+		pr_devel("%s, vfe_release\n", __func__);
 		if (sync->core_powered_on) {
 			if (sync->vfefn.vfe_release)
 				sync->vfefn.vfe_release(sync->pdev);
 			/*sensor release */
-			pr_info("%s, s_release\n", __func__);
+			pr_devel("%s, s_release\n", __func__);
 			sync->sctrl.s_release();
-			pr_info("%s, msm_camio_sensor_clk_off\n", __func__);
+			pr_devel("%s, msm_camio_sensor_clk_off\n", __func__);
 			msm_camio_sensor_clk_off(sync->pdev);
 			if (sync->sfctrl.strobe_flash_release) {
-				pr_info("%s, strobe_flash_release\n", __func__);
+				pr_devel("%s, strobe_flash_release\n", __func__);
 				sync->sfctrl.strobe_flash_release(
 				sync->sdata->strobe_flash_data, 1);
 			}
@@ -2520,7 +2548,7 @@ static int __msm_release(struct msm_sync *sync)
 
 		wake_unlock(&sync->wake_lock);
 		sync->apps_id = NULL;
-		pr_info("%s: completed\n", __func__);
+		pr_devel("%s: completed\n", __func__);
 		sync->core_powered_on = 0;
 	}
 	mutex_unlock(&sync->lock);
@@ -2532,13 +2560,30 @@ static int msm_release_config(struct inode *node, struct file *filep)
 {
 	int rc;
 	struct msm_cam_device *pmsm = filep->private_data;
-	pr_info("%s: %s\n", __func__, filep->f_path.dentry->d_name.name);
+	pr_devel("%s: %s\n", __func__, filep->f_path.dentry->d_name.name);
 	rc = __msm_release(pmsm->sync);
 	if (!rc) {
 		msm_queue_drain(&pmsm->sync->event_q, list_config);
 		atomic_set(&pmsm->opened, 0);
 	}
-	pr_info("%s, completed\n", __func__);
+	pr_devel("%s, completed\n", __func__);
+	return rc;
+}
+
+static int msm_release_ocontrol(struct inode *node, struct file *filep)
+{
+	int rc;
+	struct msm_control_device *ctrl_pmsm = filep->private_data;
+	struct msm_cam_device *pmsm = ctrl_pmsm->pmsm;
+	pr_devel("%s: %s\n", __func__, filep->f_path.dentry->d_name.name);
+	rc = __msm_release(pmsm->sync);
+#if 0
+	if (!rc) {
+		msm_queue_drain(&ctrl_pmsm->ctrl_q, list_control);
+		kfree(ctrl_pmsm);
+	}
+#endif
+	pr_devel("%s, completed\n", __func__);
 	return rc;
 }
 
@@ -2547,11 +2592,11 @@ static int msm_release_control(struct inode *node, struct file *filep)
 	int rc;
 	struct msm_control_device *ctrl_pmsm = filep->private_data;
 	struct msm_cam_device *pmsm = ctrl_pmsm->pmsm;
-	pr_info("%s: %s\n", __func__, filep->f_path.dentry->d_name.name);
+	pr_devel("%s: %s\n", __func__, filep->f_path.dentry->d_name.name);
 	g_v4l2_opencnt--;
 	mutex_lock(&pmsm->sync->lock);
 	if (pmsm->sync->core_powered_on && pmsm->sync->vfefn.vfe_stop) {
-		pr_info("%s, stop vfe if active\n", __func__);
+		pr_devel("%s, stop vfe if active\n", __func__);
 		pmsm->sync->vfefn.vfe_stop();
 	}
 	mutex_unlock(&pmsm->sync->lock);
@@ -2560,7 +2605,7 @@ static int msm_release_control(struct inode *node, struct file *filep)
 		msm_queue_drain(&ctrl_pmsm->ctrl_q, list_control);
 		kfree(ctrl_pmsm);
 	}
-		pr_info("%s, completed\n", __func__);
+		pr_devel("%s, completed\n", __func__);
 	return rc;
 }
 
@@ -2568,13 +2613,13 @@ static int msm_release_frame(struct inode *node, struct file *filep)
 {
 	int rc;
 	struct msm_cam_device *pmsm = filep->private_data;
-	pr_info("%s: %s\n", __func__, filep->f_path.dentry->d_name.name);
+	pr_devel("%s: %s\n", __func__, filep->f_path.dentry->d_name.name);
 	rc = __msm_release(pmsm->sync);
 	if (!rc) {
 		msm_queue_drain(&pmsm->sync->frame_q, list_frame);
 		atomic_set(&pmsm->opened, 0);
 	}
-	pr_info("%s, completed\n", __func__);
+	pr_devel("%s, completed\n", __func__);
 	return rc;
 }
 
@@ -3057,6 +3102,7 @@ static int __msm_open(struct msm_cam_device *pmsm, const char *const apps_id,
 		sync->core_powered_on = 1;
 	}
 	sync->opencnt++;
+	
 
 msm_open_done:
 	mutex_unlock(&sync->lock);
@@ -3109,6 +3155,27 @@ static int msm_open_frame(struct inode *inode, struct file *filep)
 static int msm_open(struct inode *inode, struct file *filep)
 {
 	return msm_open_common(inode, filep, 1, 0);
+}
+
+static int msm_open_ocontrol(struct inode *inode, struct file *filep)
+{
+	int rc;
+
+	struct msm_control_device *octrl_pmsm =
+		kmalloc(sizeof(struct msm_control_device), GFP_KERNEL);
+	if (!octrl_pmsm)
+		return -ENOMEM;
+
+	rc = msm_open_common(inode, filep, 0, 1);
+	if (rc < 0) {
+		kfree(octrl_pmsm);
+		return rc;
+	}
+	octrl_pmsm->pmsm = filep->private_data;
+	filep->private_data = octrl_pmsm;
+
+	CDBG("%s: rc %d\n", __func__, rc);
+	return rc;
 }
 
 static int msm_open_control(struct inode *inode, struct file *filep)
@@ -3195,6 +3262,13 @@ static const struct file_operations msm_fops_control = {
 	.open = msm_open_control,
 	.unlocked_ioctl = msm_ioctl_control,
 	.release = msm_release_control,
+};
+
+static const struct file_operations msm_fops_ocontrol = {
+	.owner = THIS_MODULE,
+	.open = msm_open_ocontrol,
+	.unlocked_ioctl = msm_ioctl_ocontrol,
+	.release = msm_release_ocontrol,
 };
 
 static const struct file_operations msm_fops_frame = {
@@ -3320,7 +3394,7 @@ static int msm_sync_init(struct msm_sync *sync,
 		sync->sdata->strobe_flash_data->state = 0;
 		spin_lock_init(&sync->sdata->strobe_flash_data->spin_lock);
 	}
-	pr_info("%s: initialized %s\n", __func__, sync->sdata->sensor_name);
+	pr_devel("%s: initialized %s\n", __func__, sync->sdata->sensor_name);
 	return rc;
 }
 
@@ -3330,11 +3404,14 @@ static int msm_sync_destroy(struct msm_sync *sync)
 	return 0;
 }
 
+#define MSM_CAMDEVS 4
+
 static int msm_device_init(struct msm_cam_device *pmsm,
 		struct msm_sync *sync,
 		int node)
 {
-	int dev_num = 3 * node;
+	int i;
+	int dev_num = MSM_CAMDEVS * node;
 	int rc = msm_setup_cdev(pmsm, node,
 		MKDEV(MAJOR(msm_devno), dev_num),
 		"control", &msm_fops_control);
@@ -3365,13 +3442,26 @@ static int msm_device_init(struct msm_cam_device *pmsm,
 		return rc;
 	}
 
-	atomic_set(&pmsm[0].opened, 0);
-	atomic_set(&pmsm[1].opened, 0);
-	atomic_set(&pmsm[2].opened, 0);
+#if MSM_CAMDEVS > 3
+	rc = msm_setup_cdev(pmsm + 3, node,
+		MKDEV(MAJOR(msm_devno), dev_num + 3),
+		"ocontrol", &msm_fops_ocontrol);
+	if (rc < 0) {
+		pr_err("%s: error creating ocontrol node: %d\n", __func__, rc);
+		msm_tear_down_cdev(pmsm,
+			MKDEV(MAJOR(msm_devno), dev_num));
+		msm_tear_down_cdev(pmsm + 1,
+			MKDEV(MAJOR(msm_devno), dev_num + 1));
+		msm_tear_down_cdev(pmsm + 2,
+			MKDEV(MAJOR(msm_devno), dev_num + 1));
+		return rc;
+	}
+#endif
 
-	pmsm[0].sync = sync;
-	pmsm[1].sync = sync;
-	pmsm[2].sync = sync;
+	for (i = 0; i < MSM_CAMDEVS; i++) {
+		atomic_set(&pmsm[i].opened, 0);
+		pmsm[i].sync = sync;
+	}
 
 	return rc;
 }
@@ -3392,7 +3482,7 @@ int msm_camera_drv_start(struct platform_device *dev,
 	if (!msm_class) {
 		/* There are three device nodes per sensor */
 		rc = alloc_chrdev_region(&msm_devno, 0,
-				3 * MSM_MAX_CAMERA_SENSORS,
+				MSM_CAMDEVS * MSM_MAX_CAMERA_SENSORS,
 				"msm_camera");
 		if (rc < 0) {
 			pr_err("%s: failed to allocate chrdev: %d\n", __func__,
@@ -3409,11 +3499,11 @@ int msm_camera_drv_start(struct platform_device *dev,
 		}
 	}
 
-	pmsm = kzalloc(sizeof(struct msm_cam_device) * 3 +
+	pmsm = kzalloc(sizeof(struct msm_cam_device) * MSM_CAMDEVS +
 			sizeof(struct msm_sync), GFP_ATOMIC);
 	if (!pmsm)
 		return -ENOMEM;
-	sync = (struct msm_sync *)(pmsm + 3);
+	sync = (struct msm_sync *)(pmsm + MSM_CAMDEVS);
 
 	rc = msm_sync_init(sync, dev, sensor_probe);
 	if (rc < 0) {

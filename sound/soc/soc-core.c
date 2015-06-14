@@ -1189,6 +1189,11 @@ int snd_soc_suspend(struct device *dev)
 	snd_power_wait(card->snd_card, SNDRV_CTL_POWER_D0);
 	snd_power_unlock(card->snd_card);
 
+#if 1
+	if (card->suspend_pre)
+		card->suspend_pre(card);
+#endif
+
 	/* we're going to block userspace touching us until resume completes */
 	snd_power_change_state(card->snd_card, SNDRV_CTL_POWER_D3hot);
 
@@ -1218,8 +1223,10 @@ int snd_soc_suspend(struct device *dev)
 		snd_pcm_suspend_all(card->rtd[i].pcm);
 	}
 
+#if 0
 	if (card->suspend_pre)
 		card->suspend_pre(card);
+#endif
 
 	for (i = 0; i < card->num_rtd; i++) {
 		struct snd_soc_dai *cpu_dai = card->rtd[i].cpu_dai;
