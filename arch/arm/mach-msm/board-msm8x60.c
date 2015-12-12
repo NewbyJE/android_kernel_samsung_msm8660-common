@@ -2949,8 +2949,10 @@ static struct msm_otg_platform_data msm_otg_pdata = {
 	.bam_disable		 = 1, // -JCS TODO
 	.hsdrvslope			= 0x05, // -JCS TODO
 #ifdef CONFIG_USB_EHCI_MSM_72K
+#ifndef CONFIG_MACH_TENDERLOIN
 	.pmic_id_notif_init = msm_hsusb_pmic_id_notif_init,
 	.phy_id_setup_init = msm_hsusb_phy_id_setup_init,
+#endif
 #endif
 #ifdef CONFIG_USB_EHCI_MSM_72K
 	.vbus_power = msm_hsusb_vbus_power,
@@ -3166,6 +3168,7 @@ void max8903b_set_connected_ps (unsigned connected)
 
 	if (!connected) {
 		max8903b_disable_charge();
+		max8903b_set_charge_ma(0);
 		max8903b_vbus_draw_ma_max = 0;
 	} else if (connected & MAX8903B_CONNECTED_PS_DOCK) {
 		max8903b_set_charge_ma(MAX8903B_DOCK_DRAW_MA);
